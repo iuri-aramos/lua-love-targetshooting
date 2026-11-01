@@ -7,6 +7,7 @@ local game
 local target
 local sky
 local pointer
+local gameState = "playing"
 
 local function checkClickOnTarget(x, y)
     local distance = math.sqrt((x - target.x) ^ 2 + (y - target.y) ^ 2)
@@ -35,8 +36,9 @@ function love.load()
     game.ALTURA = love.graphics.getHeight()
     game.CENTRO_X = game.LARGURA / 2
     game.CENTRO_Y = game.ALTURA / 2
-    game.TEMPORIZADOR = 10
+    game.TEMPORIZADOR = 15
     game.SCORE = 0
+    game:setBackgroundSound("assets/audio/musica-fundo.mp3")
 
     -- TARGET
     target = TARGET_C:new(math.random(50, game.LARGURA - 50), math.random(50, game.ALTURA - 50), 50)
@@ -60,9 +62,13 @@ end
 function love.update(dt)
     pointer.x, pointer.y = mousePosition()
 
-    game.TEMPORIZADOR = math.max(0, game.TEMPORIZADOR - dt)
+    if game.TEMPORIZADOR <= 0 then
+        gameState = "gameover"
+    else
+        game.TEMPORIZADOR = math.max(0, game.TEMPORIZADOR - dt)
 
-    target.scale = 1 + (target.scale - 1) * math.exp(-10 * dt)
+        target.scale = 1 + (target.scale - 1) * math.exp(-10 * dt)
+    end
 end
 
 function love.mousepressed(x, y, button)
@@ -81,15 +87,55 @@ function love.mousepressed(x, y, button)
     end
 end
 
+function love.keypressed(key)
+    if key == "r" and gameState == "gameover" then
+        -- Reiniciar o jogo
+        gameState = "playing"
+        game.TEMPORIZADOR = 10
+        game.SCORE = 0
+        target.x = math.random(50, game.LARGURA - 50)
+        target.y = math.random(50, game.ALTURA - 50)
+    end
+end
+
 function love.draw()
     -- background
     love.graphics.draw(sky.image, 0, 0, 0, sky.scaleX, sky.scaleY)
+    if game.backgroundSound then
+        if not game.backgroundSound:isPlaying() then
+            game.backgroundSound:play()
+        end
+    end
 
-    love.graphics.print(string.format("TEMPORIZADOR: %.1f", game.TEMPORIZADOR), game.CENTRO_X - 90, 30)
-    love.graphics.print("SCORE: " .. game.SCORE, 50, 30)
+    if gameState == "gameover" then
+        
+        game.backgroundSound:stop()
+        -- adicionar cor cinza claro
+        love.graphics.setColor(0.5, 0.5, 0.5)
+        love.graphics.draw(sky.image, 0, 0, 0, sky.scaleX, sky.scaleY)
 
-    love.graphics.draw(target.image, target.x, target.y, 0, target.scale, target.scale, target.radius, target.radius)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(love.graphics.newFont(30))
+        love.graphics.print("GAME OVER", game.CENTRO_X - 60, game.CENTRO_Y - 10)
+        love.graphics.print("SCORE: " .. game.SCORE, game.CENTRO_X - 60, game.CENTRO_Y + 20)
 
-    love.graphics.draw(pointer.image, pointer.x, pointer.y, 0, 1, 1, pointer.image:getWidth() / 2,
-        pointer.image:getHeight() / 2)
+        love.graphics.setFont(love.graphics.newFont(20))
+        love.graphics.print("Pressione 'R' para reiniciar", game.CENTRO_X - 100, game.CENTRO_Y + 60)
+    else
+        -- colocar o SCORE com cor branca
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("SCORE: " .. game.SCORE, 10, 10)
+
+        -- colocar o TEMPORIZADOR com cor branca
+        love.graphics.print("TIME: " .. string.format("%.2f", game.TEMPORIZADOR), 10, 40)
+
+        -- desenhar o TARGET
+        love.graphics.draw(target.image, target.x, target.y, 0, target.scaleX, target.scaleY, target.radius,
+            target.radius)
+
+        -- desenhar o POINTER
+        love.graphics.draw(pointer.image, pointer.x, pointer.y, 0, 1, 1, pointer.image:getWidth() / 2,
+            pointer.image:getHeight() / 2)
+
+    end
 end
