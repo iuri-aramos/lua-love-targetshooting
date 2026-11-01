@@ -1,49 +1,17 @@
-# Meu Jogo
+# Target Shooting
 
-Base de jogo para LÖVE 11.5, com estados, entidades e `middleclass`.
+Jogo de tiro ao alvo feito com LÖVE 11.5. Acerte o alvo com o mouse e marque pontos antes que o cronômetro de 10 segundos termine.
 
-## Executar e reiniciar ao salvar
-
-Instale o [LÖVE 11.5](https://love2d.org/) e o Python 3. Execute na pasta `meu-jogo/`:
+## Executar
 
 ```sh
-python3 dev.py
+love .
 ```
 
-O lançador monitora `main.lua`, `conf.lua`, `lib/`, `src/` e `assets/`. Ao detectar uma
-mudança, encerra o jogo e abre uma nova janela. Pressione `Ctrl+C` no terminal para parar.
-
-Para escolher outro caminho do executável LÖVE, defina `LOVE_BIN`:
-
-```sh
-LOVE_BIN=/caminho/para/love python3 dev.py
-```
-
-Para iniciar sem monitoramento, execute `love .`.
+Opcionalmente, execute `python3 dev.py` para reiniciar o jogo quando arquivos do projeto mudarem.
 
 ## Controles
 
-- `WASD` ou setas: mover
-- `Espaço`: atirar
-- `Enter`: iniciar ou reiniciar
-- `Esc`: sair
+- Clique no alvo: marcar ponto e reposicionar o alvo.
 
-## Estrutura
-
-```text
-meu-jogo/
-├── main.lua
-├── conf.lua
-├── dev.py
-├── lib/
-│   ├── middleclass.lua
-│   └── LICENSES.md
-├── src/
-│   ├── entities/
-│   ├── systems/
-│   └── states/
-└── assets/
-    ├── images/
-    ├── audio/
-    └── fonts/
-```
+O jogo ainda não tem telas de menu, pausa ou reinício. O motor de estados está pendente.
