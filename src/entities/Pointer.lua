@@ -1,6 +1,6 @@
 Pointer = {}
 
-function Pointer:new()
+function Pointer:new(x, y)
     local pointer = {}
     setmetatable(pointer, self)
     self.__index = self
