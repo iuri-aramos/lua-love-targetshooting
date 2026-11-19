@@ -1,0 +1,38 @@
+# Game runtime & save data
+score.txt
+
+# Extension caches and telemetry
+.tua/
+*.log
+
+# Python cache (from dev.py)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Editor & IDE local files
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# LÖVE package distributions & builds
+*.love
+dist/
+build/
+bin/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
