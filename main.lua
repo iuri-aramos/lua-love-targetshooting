@@ -41,7 +41,7 @@ function love.load()
     game.ALTURA = love.graphics.getHeight()
     game.CENTRO_X = game.LARGURA / 2
     game.CENTRO_Y = game.ALTURA / 2
-    game.TEMPORIZADOR = 2
+    game.TEMPORIZADOR = 15
     game.SCORE = 0
     game:setBackgroundSound("assets/audio/musica-fundo.mp3")
 
