@@ -1,13 +1,23 @@
+---@class Target
+---@field x number
+---@field y number
+---@field scale number
+---@field scaleX number
+---@field scaleY number
+---@field radius number
+---@field image any
 local Target = {}
+Target.__index = Target
 
+---@return Target
 function Target:new(x, y, radius)
-    local target = {}
-    setmetatable(target, self)
-    self.__index = self
+    local target = setmetatable({}, self)
 
     target.x = x or 0
     target.y = y or 0
     target.scale = 1
+    target.scaleX = 1
+    target.scaleY = 1
     target.radius = radius or 50
     target.image = nil
 

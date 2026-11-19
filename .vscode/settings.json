@@ -1,4 +1,18 @@
 {
   "Lua.runtime.version": "LuaJIT",
-  "Lua.diagnostics.globals": ["love"]
+  "Lua.diagnostics.globals": [
+    "love"
+  ],
+  "Lua.workspace.checkThirdParty": false,
+  "Lua.workspace.library": [
+    "${3rd}/love2d/library"
+  ],
+  "Lua.runtime.path": [
+    "?.lua",
+    "?/init.lua",
+    "src/?.lua"
+  ],
+  "files.associations": {
+    "*.lua": "lua"
+  }
 }

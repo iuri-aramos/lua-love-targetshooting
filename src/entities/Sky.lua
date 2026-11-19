@@ -1,10 +1,16 @@
-Sky = {}
+---@class Sky
+---@field image any
+---@field scaleX number
+---@field scaleY number
+local Sky = {}
+Sky.__index = Sky
 
+---@return Sky
 function Sky:new()
-    local sky = {}
-    setmetatable(sky, self)
-    self.__index = self
-    self.image = nil
+    local sky = setmetatable({}, self)
+    sky.image = nil
+    sky.scaleX = 1
+    sky.scaleY = 1
 
     return sky
 end

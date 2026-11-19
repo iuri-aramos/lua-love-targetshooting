@@ -3,11 +3,16 @@ local TARGET_C = require("src.entities.Target")
 local SKY_C = require("src.entities.Sky")
 local POINTER_C = require("src.entities.Pointer")
 
+---@type Game
 local game
+---@type Target
 local target
+---@type Sky
 local sky
+---@type Pointer
 local pointer
 local gameState = "playing"
+local listPlayersScore
 
 local function checkClickOnTarget(x, y)
     local distance = math.sqrt((x - target.x) ^ 2 + (y - target.y) ^ 2)
@@ -36,7 +41,7 @@ function love.load()
     game.ALTURA = love.graphics.getHeight()
     game.CENTRO_X = game.LARGURA / 2
     game.CENTRO_Y = game.ALTURA / 2
-    game.TEMPORIZADOR = 15
+    game.TEMPORIZADOR = 2
     game.SCORE = 0
     game:setBackgroundSound("assets/audio/musica-fundo.mp3")
 
@@ -63,10 +68,14 @@ function love.update(dt)
     pointer.x, pointer.y = mousePosition()
 
     if game.TEMPORIZADOR <= 0 then
-        gameState = "gameover"
+        if gameState ~= "gameover" then
+            gameState = "gameover"
+            game:saveScore()
+
+            listPlayersScore = game:loadScores()
+        end
     else
         game.TEMPORIZADOR = math.max(0, game.TEMPORIZADOR - dt)
-
         target.scale = 1 + (target.scale - 1) * math.exp(-10 * dt)
     end
 end
@@ -108,8 +117,9 @@ function love.draw()
     end
 
     if gameState == "gameover" then
-        
+
         game.backgroundSound:stop()
+
         -- adicionar cor cinza claro
         love.graphics.setColor(0.5, 0.5, 0.5)
         love.graphics.draw(sky.image, 0, 0, 0, sky.scaleX, sky.scaleY)
@@ -121,6 +131,10 @@ function love.draw()
 
         love.graphics.setFont(love.graphics.newFont(20))
         love.graphics.print("Pressione 'R' para reiniciar", game.CENTRO_X - 100, game.CENTRO_Y + 60)
+
+        love.graphics.print("GENERAL SCORE", 10, 10)
+        love.graphics.setFont(love.graphics.newFont(20))
+        love.graphics.print(listPlayersScore, 75, 40)
     else
         -- colocar o SCORE com cor branca
         love.graphics.setColor(1, 1, 1)

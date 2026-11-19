@@ -1,9 +1,14 @@
-Pointer = {}
+---@class Pointer
+---@field x number
+---@field y number
+---@field image any
+---@field shotSound any
+local Pointer = {}
+Pointer.__index = Pointer
 
+---@return Pointer
 function Pointer:new(x, y)
-    local pointer = {}
-    setmetatable(pointer, self)
-    self.__index = self
+    local pointer = setmetatable({}, self)
 
     pointer.x = x or 0
     pointer.y = y or 0
