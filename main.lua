@@ -3,6 +3,9 @@ local TARGET_C = require("src.entities.Target")
 local SKY_C = require("src.entities.Sky")
 local POINTER_C = require("src.entities.Pointer")
 
+--
+local GameStateManager = require("src.states.GameStateManager")
+
 ---@type Game
 local game
 ---@type Target
@@ -11,8 +14,10 @@ local target
 local sky
 ---@type Pointer
 local pointer
-local gameState = "playing"
+
 local listPlayersScore
+local bigFont
+local defaultFont
 
 local function checkClickOnTarget(x, y)
     local distance = math.sqrt((x - target.x) ^ 2 + (y - target.y) ^ 2)
@@ -34,6 +39,8 @@ function love.resize(w, h)
 end
 
 function love.load()
+    bigFont = love.graphics.newFont(30)
+    defaultFont = love.graphics.newFont(20)
 
     game = GAME_C:new()
 
@@ -65,43 +72,48 @@ function love.load()
 end
 
 function love.update(dt)
-    pointer.x, pointer.y = mousePosition()
+    if game.TEMPORIZADOR <= 0 and not GameStateManager:is(GameStateManager.STATES.GAMEOVER) then
+        GameStateManager:set(GameStateManager.STATES.GAMEOVER)
+        game:saveScore()
+        listPlayersScore = game:loadScores()
+    end
+    if GameStateManager:is(GameStateManager.STATES.PLAYING) then
+        pointer.x, pointer.y = mousePosition()
 
-    if game.TEMPORIZADOR <= 0 then
-        if gameState ~= "gameover" then
-            gameState = "gameover"
-            game:saveScore()
-
-            listPlayersScore = game:loadScores()
-        end
-    else
         game.TEMPORIZADOR = math.max(0, game.TEMPORIZADOR - dt)
         target.scale = 1 + (target.scale - 1) * math.exp(-10 * dt)
     end
 end
 
 function love.mousepressed(x, y, button)
-    if button == 1 and game.TEMPORIZADOR > 0 then
-        pointer.shotSound:stop()
-        pointer.shotSound:seek(0)
-        pointer.shotSound:play()
+    if GameStateManager:is(GameStateManager.STATES.PLAYING) then
+        if button == 1 and game.TEMPORIZADOR > 0 then
+            pointer.shotSound:stop()
+            pointer.shotSound:seek(0)
+            pointer.shotSound:play()
 
-        if checkClickOnTarget(x, y) then
-            game.SCORE = game.SCORE + 1
-            target:setScaleX(1.4)
-            target.x = math.random(50, game.LARGURA - 50)
-            target.y = math.random(50, game.ALTURA - 50)
-
+            if checkClickOnTarget(x, y) then
+                game.SCORE = game.SCORE + 1
+                target:setScaleX(1.4)
+                target.x = math.random(50, game.LARGURA - 50)
+                target.y = math.random(50, game.ALTURA - 50)
+            end
         end
     end
 end
 
 function love.keypressed(key)
-    if key == "r" and gameState == "gameover" then
+    if GameStateManager:is(GameStateManager.STATES.START) then
+        GameStateManager:set(GameStateManager.STATES.PLAYING)
+    elseif GameStateManager:is(GameStateManager.STATES.PLAYING) and key == "p" then
+        GameStateManager:set(GameStateManager.STATES.PAUSED)
+    elseif GameStateManager:is(GameStateManager.STATES.PAUSED) and (key == "p" or key == "escape") then
+        GameStateManager:set(GameStateManager.STATES.PLAYING)
+    elseif GameStateManager:is(GameStateManager.STATES.GAMEOVER) and key == "r" then
         -- Reiniciar o jogo
-        gameState = "playing"
-        game.TEMPORIZADOR = 10
+        GameStateManager:set(GameStateManager.STATES.PLAYING)
         game.SCORE = 0
+        game.TEMPORIZADOR = 15
         target.x = math.random(50, game.LARGURA - 50)
         target.y = math.random(50, game.ALTURA - 50)
     end
@@ -110,33 +122,20 @@ end
 function love.draw()
     -- background
     love.graphics.draw(sky.image, 0, 0, 0, sky.scaleX, sky.scaleY)
-    if game.backgroundSound then
-        if not game.backgroundSound:isPlaying() then
-            game.backgroundSound:play()
+
+    if GameStateManager:is(GameStateManager.STATES.START) then
+        love.graphics.setFont(bigFont)
+        local font = love.graphics.getFont()
+        local text = "PRESS ANY KEY TO START"
+        local y = game.CENTRO_Y - (font:getHeight() / 2)
+        love.graphics.printf(text, 0, y, game.LARGURA, "center")
+    elseif GameStateManager:is(GameStateManager.STATES.PLAYING) then
+        if game.backgroundSound then
+            if not game.backgroundSound:isPlaying() then
+                game.backgroundSound:play()
+            end
         end
-    end
 
-    if gameState == "gameover" then
-
-        game.backgroundSound:stop()
-
-        -- adicionar cor cinza claro
-        love.graphics.setColor(0.5, 0.5, 0.5)
-        love.graphics.draw(sky.image, 0, 0, 0, sky.scaleX, sky.scaleY)
-
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.setFont(love.graphics.newFont(30))
-        love.graphics.print("GAME OVER", game.CENTRO_X - 60, game.CENTRO_Y - 10)
-        love.graphics.print("SCORE: " .. game.SCORE, game.CENTRO_X - 60, game.CENTRO_Y + 20)
-
-        love.graphics.setFont(love.graphics.newFont(20))
-        love.graphics.print("Pressione 'R' para reiniciar", game.CENTRO_X - 100, game.CENTRO_Y + 60)
-
-        love.graphics.print("GENERAL SCORE", 10, 10)
-        love.graphics.setFont(love.graphics.newFont(20))
-        love.graphics.print(listPlayersScore, 75, 40)
-    else
-        -- colocar o SCORE com cor branca
         love.graphics.setColor(1, 1, 1)
         love.graphics.print("SCORE: " .. game.SCORE, 10, 10)
 
@@ -150,6 +149,37 @@ function love.draw()
         -- desenhar o POINTER
         love.graphics.draw(pointer.image, pointer.x, pointer.y, 0, 1, 1, pointer.image:getWidth() / 2,
             pointer.image:getHeight() / 2)
+    elseif GameStateManager:is(GameStateManager.STATES.PAUSED) then
+        game.backgroundSound:pause()
+        -- adicionar cor cinza claro
+        love.graphics.setColor(0.5, 0.5, 0.5)
+        love.graphics.draw(sky.image, 0, 0, 0, sky.scaleX, sky.scaleY)
 
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(bigFont)
+        local font = love.graphics.getFont()
+        local textPaused1 = "PAUSED"
+        local textPaused2 = "to return to the game press 'p' or 'escape'"
+        local y = game.CENTRO_Y - (font:getHeight() / 2)
+        love.graphics.printf(textPaused1, 0, y, game.LARGURA, "center")
+        love.graphics.printf(textPaused2, 0, y + 50, game.LARGURA, "center")
+    elseif GameStateManager:is(GameStateManager.STATES.GAMEOVER) then
+        game.backgroundSound:stop()
+
+        -- adicionar cor cinza claro
+        love.graphics.setColor(0.5, 0.5, 0.5)
+        love.graphics.draw(sky.image, 0, 0, 0, sky.scaleX, sky.scaleY)
+
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(bigFont)
+        love.graphics.print("GAME OVER", game.CENTRO_X - 60, game.CENTRO_Y - 10)
+        love.graphics.print("SCORE: " .. game.SCORE, game.CENTRO_X - 60, game.CENTRO_Y + 20)
+
+        love.graphics.setFont(defaultFont)
+        love.graphics.print("Pressione 'R' para reiniciar", game.CENTRO_X - 100, game.CENTRO_Y + 80)
+
+        love.graphics.print("GENERAL SCORE", 10, 10)
+        love.graphics.setFont(defaultFont)
+        love.graphics.print(listPlayersScore, 75, 40)
     end
 end
